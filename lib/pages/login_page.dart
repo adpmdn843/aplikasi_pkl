@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:aplikasi_pkl/pages/about_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main_page.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({
@@ -37,11 +37,32 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
 
   // ==========================================================
-  // URL API GOOGLE APPS SCRIPT
+  // URL API
+  //
+  // ANDROID:
+  // Langsung ke Google Apps Script
+  //
+  // WEB:
+  // Lewat Cloudflare Worker untuk mengatasi CORS
   // ==========================================================
 
-  static const String apiUrl =
+  static const String directApiUrl =
       'https://script.google.com/macros/s/AKfycbz9RpGz2yKPdHkQ19Z_7aew9PuaCtPm7OpYPi8ROJJKO3qJA70tkKP8wjgj3qxlGknk/exec';
+
+  static const String webApiUrl =
+      'https://aplikasi-pkl-api.adpmdn843.workers.dev/';
+
+  // ==========================================================
+  // PILIH API SESUAI PLATFORM
+  // ==========================================================
+
+  static String get apiUrl {
+    if (kIsWeb) {
+      return webApiUrl;
+    }
+
+    return directApiUrl;
+  }
 
   // ==========================================================
   // DISPOSE
@@ -166,11 +187,15 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       debugPrint(
-        'ID PKL: $idPKL',
+        'PLATFORM: ${kIsWeb ? 'WEB' : 'ANDROID / MOBILE'}',
       );
 
       debugPrint(
-        'URL: $url',
+        'API: $apiUrl',
+      );
+
+      debugPrint(
+        'ID PKL: $idPKL',
       );
 
       debugPrint(
@@ -178,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // ======================================================
-      // REQUEST KE GOOGLE APPS SCRIPT
+      // REQUEST KE API
       // ======================================================
 
       final response = await http
@@ -214,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode != 200) {
         if (response.statusCode == 404) {
           _showMessage(
-            'HTTP 404: URL Google Apps Script tidak ditemukan.',
+            'HTTP 404: API tidak ditemukan.',
           );
         } else {
           _showMessage(
@@ -563,10 +588,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // ======================================================
-      // MASUK KEMBALI KE MAIN PAGE
-      //
-      // MainPage akan menerima userData ini sehingga tidak
-      // perlu checkSession ke server untuk kedua kalinya.
+      // MASUK KE MAIN PAGE
       // ======================================================
 
       Navigator.of(context).pushReplacement(
@@ -1321,7 +1343,6 @@ class _LoginPageState extends State<LoginPage> {
 
             // ==================================================
             // ABOUT
-            // HARUS PALING BELAKANG DI STACK
             // ==================================================
 
             Positioned(
